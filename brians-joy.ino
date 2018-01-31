@@ -2,12 +2,31 @@
 // A joystick HID program for a Promicro controller.
 //
 // A0 - enable joy
-// A3 - x-axis
+// A1 - x-axis
+// A2 - x-axis
 //
-// David Ohlemacher
+// David Ohlemacher, 2018, Power Up Season
 //------------------------------------------------------------
 
 #include "Joystick.h"
+
+// Set to true to test "Auto Send" mode or false to test "Manual Send" mode.
+const bool testAutoSendMode = false;
+// Slow down the loop() for debugging.
+const bool turtleMode = false;
+// Pins
+const int xPin = 1;
+const int yPin = 2;
+// Buttons
+const byte button0 = 0;
+byte button0State = 0;
+const byte buttonDown = 0;
+const byte buttonUp = 1;
+// Voltage mappings
+const int minAnalog = 0;
+const int maxAnalog = 1023;
+const int minAxis = -127;
+const int maxAxis =  127;
 
 // Joystick ctor params:
 const byte hidReportId    = 3;  // Do not use 1 (mouse) or 2 (keyboard)
@@ -42,25 +61,6 @@ Joystick_ Joystick(
         hasAccelerator,
         hasBrake,
         hasSteering);
-
-// Set to true to test "Auto Send" mode or false to test "Manual Send" mode.
-const bool testAutoSendMode = false;
-
-const int xPin = 3;
-
-const byte button0 = 0;
-byte button0State = 0;
-const byte buttonDown = 0;
-const byte buttonUp = 1;
-
-int x = -127;
-int y = -127;
-
-const unsigned long gcCycleDelta = 1000;
-const unsigned long gcButtonDelta = 500;
-const unsigned long gcAnalogDelta = 25;
-unsigned long gNextTime = 0;
-unsigned int gCurrentStep = 0;
 
 void testSingleButtonPush(unsigned int button)
 {
@@ -124,18 +124,34 @@ void testSteering(int value) {
     }
 }
 
+int mapAnalogValToAxisVal(int analogVal) {
+    const int axisVal = map(analogVal, minAnalog, maxAnalog, minAxis, maxAxis);
+    return axisVal;
+}
+
 void setXAxis() {
-    int ival = analogRead(xPin);
-    // map(value, fromLow, fromHigh, toLow, toHigh)
-    int val = map(ival, 0, 1023, -127, 127);
-    Serial.print("analog(");
-    Serial.print(ival);
+    int analogVal = analogRead(xPin);
+    int axisVal = mapAnalogValToAxisVal(analogVal);
+    Serial.print("X: analog(");
+    Serial.print(analogVal);
     Serial.print(") --> ");
     Serial.print("setXAxis(");
-    Serial.print(val);
+    Serial.print(axisVal);
     Serial.println(")");
-    Joystick.setXAxis(val);
+    Joystick.setXAxis(axisVal);
     //Joystick.setYAxis(val);
+}
+
+void setYAxis() {
+    int analogVal = analogRead(yPin);
+    int axisVal = mapAnalogValToAxisVal(analogVal);
+    Serial.print("Y: analog(");
+    Serial.print(analogVal);
+    Serial.print(") --> ");
+    Serial.print("setYAxis(");
+    Serial.print(axisVal);
+    Serial.println(")");
+    Joystick.setYAxis(axisVal);
 }
 
 void toggleButton0() {
@@ -153,19 +169,22 @@ void toggleButton0() {
 
 void setup() {
     Serial.begin(9600);
-    pinMode(A0, INPUT_PULLUP);
-    pinMode(A3, INPUT_PULLUP); 
+    pinMode(A0, INPUT_PULLUP); // enable
+    pinMode(A1, INPUT_PULLUP); // x
+    pinMode(A2, INPUT_PULLUP); // y
     pinMode(13, OUTPUT);
     
-    Joystick.setXAxisRange(-127, 127);
+    Joystick.setXAxisRange(minAxis, maxAxis);
+    Joystick.setYAxisRange(minAxis, maxAxis);
     Joystick.begin();
 }
 
 void loop() {
-    // TODO - Slow it down a bit, but remove
-    delay(1000);
+    if (turtleMode) {
+        delay(1000);
+    }
 
-    // System Disabled
+    // Sense if enabled
     if (digitalRead(A0) != 0)
     {
         // Turn indicator light off.
@@ -173,11 +192,11 @@ void loop() {
         Serial.print("-");
         return;
     }
-
     // Turn indicator light on.
     digitalWrite(13, 1);
     Serial.println("+");
 
     setXAxis();
+    setYAxis();
 }
 
