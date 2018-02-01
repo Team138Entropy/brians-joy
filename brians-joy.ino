@@ -13,7 +13,7 @@
 // Set to true to test "Auto Send" mode or false to test "Manual Send" mode.
 const bool testAutoSendMode = false;
 // Slow down the loop() for debugging.
-const bool turtleMode = false;
+const bool turtleMode = true;
 // Pins
 const int xPin = 1;
 const int yPin = 2;
@@ -62,17 +62,11 @@ Joystick_ Joystick(
         hasBrake,
         hasSteering);
 
-void testSingleButtonPush(unsigned int button)
-{
-    Serial.print("testSingleButtonPush");
-    if (button > 0)
-    {
-        Joystick.releaseButton(button - 1);
-    }
-    if (button < 4)
-    {
-        Joystick.pressButton(button);
-    }
+void setSingleButtonPush(unsigned int button) {
+    int buttonState = !digitalRead(button);
+    Joystick.setButton(A0, buttonState);
+    Serial.print("setSingleButtonPush(A0 --> ");
+    Serial.println(buttonState);
 }
 
 void testMultiButtonPush(unsigned int currentStep) {
@@ -106,22 +100,6 @@ void testMultiButtonPush(unsigned int currentStep) {
             Joystick.releaseButton(button);
         } // if (currentStep == 3)
     } // for (int button = 0; button < 32; button++)
-}
-
-void testAcceleratorBrake(int value) {
-    Serial.print("testAcceleratorBrake");
-    Joystick.setAccelerator(value);
-    Joystick.setBrake(260 - value);
-}
-
-void testSteering(int value) {
-    Serial.print("testSteering");
-    if (value < 300) {
-        Joystick.setSteering(value);
-    }
-    else {
-        Joystick.setSteering(600 - value);
-    }
 }
 
 int mapAnalogValToAxisVal(int analogVal) {
@@ -173,6 +151,9 @@ void setup() {
     pinMode(A1, INPUT_PULLUP); // x
     pinMode(A2, INPUT_PULLUP); // y
     pinMode(13, OUTPUT);
+
+    // Turn indicator light on.
+    digitalWrite(13, 1);
     
     Joystick.setXAxisRange(minAxis, maxAxis);
     Joystick.setYAxisRange(minAxis, maxAxis);
@@ -184,18 +165,7 @@ void loop() {
         delay(1000);
     }
 
-    // Sense if enabled
-    if (digitalRead(A0) != 0)
-    {
-        // Turn indicator light off.
-        digitalWrite(13, 0);
-        Serial.print("-");
-        return;
-    }
-    // Turn indicator light on.
-    digitalWrite(13, 1);
-    Serial.println("+");
-
+    setSingleButtonPush(A0);    
     setXAxis();
     setYAxis();
 }
