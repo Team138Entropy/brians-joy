@@ -12,7 +12,7 @@
 #include "Joystick.h"
 
 // Slow down loop(). Be verbose. For debugging only.
-const bool verbose        = true;
+const bool verbose        = false;
 // Voltage mappings
 const int minAnalog       = 0;    // Calibrate this value
 const int maxAnalog       = 1023; // Calibrate this value
@@ -155,7 +155,7 @@ void setup() {
 
 void loop() {
     if (verbose) {
-        delay(1000);
+        delay(500);
         Serial.println();
     }
 
