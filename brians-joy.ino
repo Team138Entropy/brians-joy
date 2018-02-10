@@ -12,10 +12,15 @@
 #include "Joystick.h"
 
 // Slow down loop(). Be verbose. For debugging only.
-const bool verbose        = false;
+const bool verbose        = true;
 // Voltage mappings
-const int minAnalog       = 0;    // Calibrate this value
-const int maxAnalog       = 1023; // Calibrate this value
+const int minAnalogX      = 529;    // Calibrate this value for turning
+const int maxAnalogX      = 1020;   // Calibrate this value
+
+const int minAnalogY      = 253;    // Calibrate this value for speed
+const int maxAnalogY      = 950;    // Calibrate this value
+
+
 const int minAxis         = -127;
 const int maxAxis         =  127;
 // Pins
@@ -64,12 +69,6 @@ Joystick_ Joystick(
         hasBrake,
         hasSteering);
 
-// Map the min/max analog values to the min/max axis values.
-int mapAnalogValToAxisVal(int analogVal) {
-    const int axisVal = map(analogVal, minAnalog, maxAnalog, minAxis, maxAxis);
-    return axisVal;
-}
-
 void setButton0() {
     buttonState0 = !digitalRead(button0);
     Joystick.setButton(0, buttonState0);
@@ -106,24 +105,86 @@ void toggleButton0() {
 }
 
 void setXAxis() {
-    int analogVal = analogRead(xPin);
-    int axisVal = mapAnalogValToAxisVal(analogVal);
-    Joystick.setXAxis(axisVal);
+    const int vIn = analogRead(xPin);
+
+    // Map the min/max analog values to the min/max axis values.
+    const float minIn = 528;
+    const float cenIn = 800;
+    const float maxIn = 1020;
+    const float minOut = 0;
+    const float cenOut = 511;
+    const float maxOut = 1023;
+    int vOut;
+
+    if (vIn <= cenIn) {
+        //vScaled = ((v - minIn)/(cenIn - minIn)) * cenOut;
+        vOut = map(vIn, minIn, cenIn, minOut, cenOut);
+    }
+    else {  // v > center
+        //vScaled = ((v - cenIn)/(maxIn - cenIn)) * (cenOut + 1) + cenOut;
+        vOut = map(vIn, cenIn, maxIn, cenOut, maxOut);
+    }
+
+    //const int axisVal = map(v, minAnalogX, maxAnalogX, minAxis, maxAxis);
+    Joystick.setXAxis(vOut);
 
     if (verbose) {
-        Serial.print("X: analog(");
-        Serial.print(analogVal);
-        Serial.print(") --> ");
-        Serial.print("setXAxis(");
-        Serial.print(axisVal);
-        Serial.println(")");
+        Serial.print("[X] vIn: ");
+        Serial.print(vIn);
+        Serial.print(" --> vOut: ");
+        Serial.print(vOut);
+        Serial.println("");
     }
 }
 
 void setYAxis() {
-    int analogVal = analogRead(yPin);
-    int axisVal = mapAnalogValToAxisVal(analogVal);
+    const int vIn = analogRead(yPin);
+
+    // Map the min/max analog values to the min/max axis values.
+    const float minIn = 254;
+    const float cenIn = 660;
+    const float maxIn = 948;
+    const float minOut = 0;
+    const float cenOut = 511;
+    const float maxOut = 1023;
+    int vOut;
+
+    if (vIn <= cenIn) {
+        //vOut= ((vIn - minIn)/(cenIn - minIn)) * cenOut;
+        vOut = map(vIn, minIn, cenIn, minOut, cenOut);
+    }
+    else {  // v > center
+        //vOut = ((vIn - cenIn)/(maxIn - cenIn)) * (cenOut + 1) + cenOut;
+        vOut = map(vIn, cenIn, maxIn, cenOut, maxOut);
+    }
+
+    //const int axisVal = map(v, minAnalogX, maxAnalogX, minAxis, maxAxis);
+    Joystick.setXAxis(vOut);
+
+    if (verbose) {
+        Serial.print("[Y] vIn: ");
+        Serial.print(vIn);
+        Serial.print(" --> vOut: ");
+        Serial.print(vOut);
+        Serial.println("");
+    }
+}
+
+// Write all axis other than X.
+void setYAxis_() {
+    const int analogVal = analogRead(yPin);
+    // Map the min/max analog values to the min/max axis values.
+    const int axisVal = map(analogVal, minAnalogY, maxAnalogY, minAxis, maxAxis);
     Joystick.setYAxis(axisVal);
+    //Joystick.setZAxis(axisVal);
+    //Joystick.setRxAxis(axisVal);
+    //Joystick.setRyAxis(axisVal);
+    //Joystick.setRzAxis(axisVal);
+    //Joystick.setRudder(axisVal);
+    //Joystick.setThrottle(axisVal);
+    //Joystick.setAccelerator(axisVal);
+    //Joystick.setBrake(axisVal);
+    //Joystick.setSteering(axisVal);
 
     if (verbose) {
         Serial.print("Y: analog(");
@@ -155,7 +216,7 @@ void setup() {
 
 void loop() {
     if (verbose) {
-        delay(500);
+        delay(1500);
         Serial.println();
     }
 
