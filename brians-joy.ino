@@ -12,13 +12,12 @@
 #include "Joystick.h"
 
 // Slow down loop(). Be verbose. For debugging only.
-const bool verbose        = true;
+const bool verbose        = false;
 
 // Voltage mappings
 const float minOut = 0;
 const float cenOut = 511;
 const float maxOut = 1023;
-
 
 // Pins
 const byte button0        = 8;
@@ -37,17 +36,17 @@ const byte hidReportId    = 3;  // Do not use 1 (mouse) or 2 (keyboard)
 const byte joystickType   = JOYSTICK_TYPE_JOYSTICK;
 const byte buttonCount    = 4;
 const byte hatSwitchCount = 0;
-const bool hasXAxis       = true;
-const bool hasYAxis       = true;
-const bool hasZAxis       = false;
-const bool hasRxAxis      = false;
-const bool hasRyAxis      = false;
-const bool hasRzAxis      = false;
-const bool hasRudder      = false;
-const bool hasThrottle    = false;
-const bool hasAccelerator = false;
-const bool hasBrake       = false;
-const bool hasSteering    = false;
+const bool hasXAxis       = true;  // x
+const bool hasYAxis       = false; // y
+const bool hasZAxis       = false; // z
+const bool hasRxAxis      = true;  // x rotate
+const bool hasRyAxis      = false; // y rotate
+const bool hasRzAxis      = false; // z rotate
+const bool hasRudder      = false; //   z rotate
+const bool hasThrottle    = false; //   slider
+const bool hasAccelerator = false; //   y
+const bool hasBrake       = false; //   z rotate
+const bool hasSteering    = false; // ?
 
 // Construct a joystick object
 Joystick_ Joystick(
@@ -93,6 +92,7 @@ void setButton1() {
     }
 }
 
+// Not used
 void toggleButton0() {
     if (buttonState0 == buttonUp) {
         buttonState0 = buttonDown;
@@ -108,6 +108,7 @@ void toggleButton0() {
     Joystick.setButton(button0, buttonState0);
 }
 
+// If vOut is near center, center it.
 int adjustVout(int vOut) {
     int vAdj = vOut;
     const int eps = 15;
@@ -124,6 +125,7 @@ int adjustVout(int vOut) {
     return vAdj;
 }
 
+// Set speed axis.
 void setXAxis() {
     const int vIn = analogRead(xPin);
 
@@ -143,19 +145,21 @@ void setXAxis() {
         vOut = map(vIn, cenIn, maxIn, cenOut, maxOut);
     }
 
-    int adjVOut = adjustVout(vOut);
-    Joystick.setXAxis(adjVOut);
+    if (hasXAxis) {
+        int adjVOut = adjustVout(vOut);
+        Joystick.setXAxis(adjVOut);
 
-    if (verbose) {
-        Serial.print("[Turn ] vIn: ");
-        Serial.print(vIn);
-        Serial.print(" --> vOut: ");
-        Serial.print(vOut);
-        if (vOut != adjVOut) {
-            Serial.print(" -> adjusted: ");
-            Serial.print(adjVOut);
+        if (verbose) {
+            Serial.print("[Turn ] vIn: ");
+            Serial.print(vIn);
+            Serial.print(" --> vOut: ");
+            Serial.print(vOut);
+            if (vOut != adjVOut) {
+                Serial.print(" -> adjusted: ");
+                Serial.print(adjVOut);
+            }
+            Serial.println();
         }
-        Serial.println();
     }
 }
 
@@ -169,6 +173,8 @@ void setOtherAxis() {
 
     int vOut;
 
+    // Compensate for the center being offset.
+    // Split and map each half.
     if (vIn <= cenIn) {
         //vOut= ((vIn - minIn)/(cenIn - minIn)) * cenOut;
         vOut = map(vIn, minIn, cenIn, minOut, cenOut);
@@ -179,20 +185,23 @@ void setOtherAxis() {
     }
 
     int adjVOut = adjustVout(vOut);
+    String ax = String("");
 
-    if (hasYAxis)       { Joystick.setYAxis       (adjVOut); }
-    if (hasZAxis)       { Joystick.setZAxis       (adjVOut); }
-    if (hasRxAxis)      { Joystick.setRxAxis      (adjVOut); }
-    if (hasRyAxis)      { Joystick.setRyAxis      (adjVOut); }
-    if (hasRzAxis)      { Joystick.setRzAxis      (adjVOut); }
-    if (hasRudder)      { Joystick.setRudder      (adjVOut); }
-    if (hasThrottle)    { Joystick.setThrottle    (adjVOut); }
-    if (hasAccelerator) { Joystick.setAccelerator (adjVOut); }
-    if (hasBrake)       { Joystick.setBrake       (adjVOut); }
-    if (hasSteering)    { Joystick.setSteering    (adjVOut); }
+    if (hasYAxis)       { Joystick.setYAxis       (adjVOut); ax+="Yy"; }
+    if (hasZAxis)       { Joystick.setZAxis       (adjVOut); ax+="Zz"; }
+    if (hasRxAxis)      { Joystick.setRxAxis      (adjVOut); ax+="Rx"; }
+    if (hasRyAxis)      { Joystick.setRyAxis      (adjVOut); ax+="Ry"; }
+    if (hasRzAxis)      { Joystick.setRzAxis      (adjVOut); ax+="Rz"; }
+    if (hasRudder)      { Joystick.setRudder      (adjVOut); ax+="Ru"; }
+    if (hasThrottle)    { Joystick.setThrottle    (adjVOut); ax+="Th"; }
+    if (hasAccelerator) { Joystick.setAccelerator (adjVOut); ax+="Ac"; }
+    if (hasBrake)       { Joystick.setBrake       (adjVOut); ax+="Br"; }
+    if (hasSteering)    { Joystick.setSteering    (adjVOut); ax+="St"; }
 
     if (verbose) {
-        Serial.print("[Speed] vIn: ");
+        Serial.print("[Speed ");
+        Serial.print(ax);
+        Serial.print("] vIn: ");
         Serial.print(vIn);
         Serial.print(" --> vOut: ");
         Serial.print(adjVOut);
@@ -219,8 +228,39 @@ void setup() {
     
     const int minAxis = 0;
     const int maxAxis = 1024;
-    Joystick.setXAxisRange(minAxis, maxAxis);
-    Joystick.setYAxisRange(minAxis, maxAxis);
+    if (hasXAxis) {
+        Joystick.setXAxisRange(minAxis, maxAxis);
+    }
+    if (hasYAxis) {
+        Joystick.setYAxisRange(minAxis, maxAxis);
+    }
+    if (hasZAxis) {
+        Joystick.setZAxisRange(minAxis, maxAxis);
+    }
+    if (hasRxAxis) {
+        Joystick.setRxAxisRange(minAxis, maxAxis);
+    }
+    if (hasRyAxis) {
+        Joystick.setRyAxisRange(minAxis, maxAxis);
+    }
+    if (hasRzAxis) {
+        Joystick.setRzAxisRange(minAxis, maxAxis);
+    }
+    if (hasRudder) {
+        Joystick.setRudderRange(minAxis, maxAxis);
+    }
+    if (hasThrottle) {
+        Joystick.setThrottleRange(minAxis, maxAxis);
+    }
+    if (hasAccelerator) {
+        Joystick.setAcceleratorRange(minAxis, maxAxis);
+    }
+    if (hasBrake) {
+        Joystick.setBrakeRange(minAxis, maxAxis);
+    }
+    if (hasSteering) {
+        Joystick.setSteeringRange(minAxis, maxAxis);
+    }
     Joystick.begin();
 }
 
