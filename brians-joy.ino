@@ -22,8 +22,8 @@ const float maxOut = 1023;
 // Pins
 const byte button0        = 8;
 const byte button1        = 9;
-const int xPin            = A2;
-const int yPin            = A3;
+const int xPin            = A3;
+const int yPin            = A2;
 
 // Buttons
 int buttonState0          = 0;
@@ -67,7 +67,7 @@ Joystick_ Joystick(
         hasSteering);
 
 void setButton0() {
-    buttonState0 = digitalRead(button0);
+    buttonState0 = ! digitalRead(button0);
     Joystick.setButton(0, buttonState0);
     if (verbose) {
         if (buttonState0 == buttonUp) {
@@ -80,7 +80,7 @@ void setButton0() {
 }
 
 void setButton1() {
-    buttonState1 = digitalRead(button1);
+    buttonState1 = ! digitalRead(button1);
     Joystick.setButton(1, buttonState1);
     if (verbose) {
         if (buttonState1 == buttonUp) {
@@ -130,9 +130,9 @@ void setXAxis() {
     const int vIn = analogRead(xPin);
 
     // Map the min/max analog values to the min/max axis values.
-    const float minIn = 528;
-    const float cenIn = 800;
-    const float maxIn = 1020;
+    const float minIn = 254;
+    const float cenIn = 660;
+    const float maxIn = 948;
 
     int vOut;
 
@@ -167,9 +167,9 @@ void setOtherAxis() {
     const int vIn = analogRead(yPin);
 
     // Map the min/max analog values to the min/max axis values.
-    const float minIn = 254;
-    const float cenIn = 660;
-    const float maxIn = 948;
+	const float minIn = 528; // speed
+    const float cenIn = 800;
+    const float maxIn = 1020;
 
     int vOut;
 
