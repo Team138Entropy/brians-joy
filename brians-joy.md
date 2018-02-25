@@ -1,6 +1,7 @@
 # Joystick code
 
 ## References
+- [Pro Micro & Fio V3 Hookup Guide](https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/hardware-overview-pro-micro)
 - [Arduino Joystick Library](https://github.com/MHeironimus/ArduinoJoystickLibrary/blob/master/README.md)
 - [WPI Joystick](http://first.wpi.edu/FRC/roborio/release/docs/java/edu/wpi/first/wpilibj/Joystick.html)
 - [Joystick Instructable](http://www.instructables.com/id/Arduino-LeonardoMicro-as-Game-ControllerJoystick/)
@@ -21,6 +22,7 @@ This will modify the name for all devices programmed. Find the "Pro Micro" secti
     - Divesified Systems - ADXL345
     - Seems to a First specific device. Little documentation found.
 - Pins:
-    - 
+    - 2: SDA
+    - 3: SCL
 - Library:
     - [Wire - I2C library](https://www.arduino.cc/en/Reference/Wire)
