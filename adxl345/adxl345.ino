@@ -23,12 +23,12 @@
 
 /*********** COMMUNICATION SELECTION ***********/
 /*    Comment Out The One You Are Not Using    */
-//ADXL345 adxl = ADXL345(10);           // USE FOR SPI COMMUNICATION, ADXL345(CS_PIN);
+//ADXL345 adxl = ADXL345(10);         // USE FOR SPI COMMUNICATION, ADXL345(CS_PIN);
 ADXL345 adxl = ADXL345();             // USE FOR I2C COMMUNICATION
 
 /****************** INTERRUPT ******************/
 /*      Uncomment If Attaching Interrupt       */
-//int interruptPin = 2;                 // Setup pin 2 to be the interrupt pin (for most Arduino Boards)
+//int interruptPin = 2;               // Setup pin 2 to be the interrupt pin (for most Arduino Boards)
 
 
 /******************** SETUP ********************/
@@ -36,7 +36,6 @@ ADXL345 adxl = ADXL345();             // USE FOR I2C COMMUNICATION
 void setup(){
 
   Serial.begin(9600);                 // Start the serial terminal
-  delay(5000);
   Serial.println("SparkFun ADXL345 Accelerometer Hook Up Guide Example");
   Serial.println();
 
@@ -90,8 +89,7 @@ void setup(){
 /*     Accelerometer Readings and Interrupt    */
 void loop(){
 
-  Serial.println("looping...");
-  delay(1000);
+  delay(200);
 
   // Accelerometer Readings
   int x,y,z;
