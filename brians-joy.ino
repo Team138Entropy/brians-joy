@@ -1,11 +1,6 @@
 //------------------------------------------------------------
 // A joystick HID program for a Promicro controller.
 //
-// A0 - button 0
-// A1 - button 1
-// A2 - x-axis
-// A3 - x-axis
-//
 // David Ohlemacher, 2018, Power Up Season
 //------------------------------------------------------------
 
@@ -13,12 +8,12 @@
 #include <SparkFun_ADXL345.h>         // SparkFun ADXL345 Library
 
 // Slow down loop(). Be verbose. For debugging only.
-const bool verbose        = true;
+const bool verbose        = false;
 
 // Voltage mappings
-const float minOut = 0;
-const float cenOut = 511;
-const float maxOut = 1023;
+const float minOut        = 0;
+const float cenOut        = 511;
+const float maxOut        = 1023;
 
 // Pins
 const byte button0        = 8;
@@ -31,6 +26,7 @@ int buttonState0          = 0;
 int buttonState1          = 0;
 const byte buttonDown     = 0;
 const byte buttonUp       = 1;
+int isTurboOn             = 0;
 
 // Joystick constructor params:
 const byte hidReportId    = 3;  // Do not use 1 (mouse) or 2 (keyboard)
@@ -153,7 +149,7 @@ void setXAxis() {
         Joystick.setXAxis(adjVOut);
 
         if (verbose) {
-            Serial.print("[Turn ] vIn: ");
+            Serial.print("[Speed] vIn: ");
             Serial.print(vIn);
             Serial.print(" --> vOut: ");
             Serial.print(vOut);
@@ -202,7 +198,7 @@ void setOtherAxis() {
     if (hasSteering)    { Joystick.setSteering    (adjVOut); ax+="St"; }
 
     if (verbose) {
-        Serial.print("[Speed ");
+        Serial.print("[Turn ");
         Serial.print(ax);
         Serial.print("] vIn: ");
         Serial.print(vIn);
@@ -221,9 +217,15 @@ void setTurboMode() {
     int x,y,z;
     adxl.readAccel(&x, &y, &z); // Read the accelerometer values and store them in variables declared above x,y,z
 
-    int isTurboOn = 0;
+    const int threshTurboDeadEps = 5;
+    const int threshTurboOn  = 24;
+    const int threshTurboOff = threshTurboOn + threshTurboDeadEps;
 
-	if (x >= 20) {
+    // Turn turbo on or off, but with an overlap to prevent cycling
+    if (x >= threshTurboOff) {
+        isTurboOn = 0;
+    }
+    else if (x <= threshTurboOn) {
 	    isTurboOn = 1;
 	}
 	Joystick.setButton(1, isTurboOn);
